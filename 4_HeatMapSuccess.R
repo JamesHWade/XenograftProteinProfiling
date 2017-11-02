@@ -7,77 +7,79 @@ DataSplitHeat <- function(){
         library(Hmisc) # for rcorr function
         library(corrplot)
         
-        dat <- read_csv("compiledLabeled.csv")
+        dat <- read_csv("compiledSummed.csv")
         
         dat.1 <- filter(dat, !grepl("p53|Abl", Target))
-        dat.6 <- filter(dat.1, `Cell Line` == "GBM 6")
-        dat.26 <- filter(dat.1, `Cell Line` == "GBM 26")
-        dat.1h <- filter(dat.1, `Time Point` == "1 h")
-        dat.24h <- filter(dat.1, `Time Point` == "24 h")
-        dat.6.1 <- filter(dat.1, `Time Point` == "1 h",
-                          `Cell Line` == "GBM 6")
-        dat.6.24 <- filter(dat.1, `Time Point` == "24 h",
-                           `Cell Line` == "GBM 6")
-        dat.26.1 <- filter(dat.1, `Time Point` == "1 h",
-                           `Cell Line` == "GBM 26")
-        dat.26.24 <- filter(dat.1, `Time Point` == "24 h",
-                            `Cell Line` == "GBM 26")
+        dat.6 <- filter(dat.1, CellLine == "GBM6")
+        dat.26 <- filter(dat.1, CellLine == "GBM26")
+        dat.1h <- filter(dat.1, TimePoint == "1h")
+        dat.24h <- filter(dat.1, TimePoint == "24h")
+        dat.6.1 <- filter(dat.1, TimePoint == "1h",
+                          CellLine == "GBM6")
+        dat.6.24 <- filter(dat.1, TimePoint == "24h",
+                           CellLine == "GBM6")
+        dat.26.1 <- filter(dat.1, TimePoint == "1h",
+                           CellLine == "GBM26")
+        dat.26.24 <- filter(dat.1, TimePoint == "24h",
+                            CellLine == "GBM26")
         
-        casting.1 <- dcast(dat.1, Treatment + `Cell Line` + `Time Point` ~
-                             Target, mean, value.var = "Net Shift")
-        casting.6 <- dcast(dat.6, Treatment + `Cell Line` + `Time Point` ~
-                             Target, mean, value.var = "Net Shift")
-        casting.26 <- dcast(dat.26, Treatment + `Cell Line` + `Time Point` ~
-                              Target, mean, value.var = "Net Shift")
-        casting.1h <- dcast(dat.1h, Treatment + `Cell Line` + `Time Point` ~
-                              Target, mean, value.var = "Net Shift")
-        casting.24h <- dcast(dat.24h, Treatment + `Cell Line` + `Time Point` ~
-                              Target, mean, value.var = "Net Shift")
-        casting.6.1 <- dcast(dat.6.1, Treatment + `Cell Line` + `Time Point` ~
-                                  Target, mean, value.var = "Net Shift")
-        casting.6.24 <- dcast(dat.6.24, Treatment + `Cell Line` + `Time Point` ~
-                               Target, mean, value.var = "Net Shift")
-        casting.26.1 <- dcast(dat.26.1, Treatment + `Cell Line` + `Time Point` ~
-                                Target, mean, value.var = "Net Shift")
-        casting.26.24 <- dcast(dat.26.24, Treatment + `Cell Line` +
-                               `Time Point` ~ Target, mean,
-                               value.var = "Net Shift")
+        casting.1 <- dcast(dat.1, TimePoint + CellLine + Treatment ~ Target, 
+                           value.var = "NormLog_mean")
+        casting.6 <- dcast(dat.6, TimePoint + CellLine + Treatment ~ Target,
+                           value.var = "NormLog_mean")
+        casting.26 <- dcast(dat.26, TimePoint + CellLine + Treatment ~Target,
+                            value.var = "NormLog_mean")
+        casting.1h <- dcast(dat.1h, TimePoint + CellLine + Treatment ~ Target,
+                            value.var = "NormLog_mean")
+        casting.24h <- dcast(dat.24h, TimePoint + CellLine + Treatment ~ Target,
+                             value.var = "NormLog_mean")
+        casting.6.1 <- dcast(dat.6.1, TimePoint + CellLine + Treatment ~ Target,
+                             value.var = "NormLog_mean")
+        casting.6.24 <- dcast(dat.6.24, TimePoint + CellLine + Treatment ~
+                                      Target,
+                              value.var = "NormLog_mean")
+        casting.26.1 <- dcast(dat.26.1, TimePoint + CellLine + Treatment ~
+                                      Target,
+                              value.var = "NormLog_mean")
+        casting.26.24 <- dcast(dat.26.24, TimePoint + CellLine + Treatment ~ 
+                                       Target,
+                               value.var = "NormLog_mean")
         
         rownames(casting.1) = paste(casting.1$Treatment,
-                                    casting.1$`Cell Line`,
-                                    casting.1$`Time Point`,
+                                    casting.1$CellLine,
+                                    casting.1$TimePoint,
                                     sep = " ")
         rownames(casting.6) = paste(casting.6$Treatment,
-                                    casting.6$`Cell Line`,
-                                    casting.6$`Time Point`,
+                                    casting.6$CellLine,
+                                    casting.6$TimePoint,
                                     sep = " ")
         rownames(casting.26) = paste(casting.26$Treatment,
-                                     casting.26$`Cell Line`, 
-                                     casting.26$`Time Point`,
+                                     casting.26$CellLine, 
+                                     casting.26$TimePoint,
                                      sep = " ")
         rownames(casting.1h) = paste(casting.1h$Treatment,
-                                     casting.1h$`Cell Line`,
-                                     casting.1h$`Time Point`,
+                                     casting.1h$CellLine,
+                                     casting.1h$TimePoint,
                                      sep = " ")
         rownames(casting.24h) = paste(casting.24h$Treatment,
-                                      casting.24h$`Cell Line`,
-                                      casting.24h$`Time Point`,
+                                      casting.24h$CellLine,
+                                      casting.24h$TimePoint,
                                       sep = " ")
         rownames(casting.6.1) = paste(casting.6.1$Treatment,
-                                      casting.6.1$`Cell Line`, 
-                                      casting.6.1$`Time Point`,
+                                      casting.6.1$CellLine, 
+                                      casting.6.1$TimePoint,
                                       sep = " ")
         rownames(casting.6.24) = paste(casting.6.24$Treatment,
-                                       casting.6.24$`Cell Line`,
-                                       casting.6.24$`Time Point`,
+                                       casting.6.24$CellLine,
+                                       casting.6.24$TimePoint,
                                        sep = " ")
         rownames(casting.26.1) = paste(casting.26.1$Treatment,
-                                       casting.26.1$`Cell Line`,
-                                       casting.26.1$`Time Point`,
+                                       casting.26.1$CellLine,
+                                       casting.26.1$TimePoint,
                                        sep = " ")
         rownames(casting.26.24) = paste(casting.26.24$Treatment,
-                                        casting.26.24$`Cell Line`,
-                                        casting.6.24$`Time Point`,
+                                        casting.26.24$CellLine,
+                                        casting.6.24$TimePoint,
                                         sep = " ")
 
         casting.1[,c(1,2,3)] <- NULL
@@ -194,7 +196,7 @@ CorrPlots <- function(){
         png('Corrplot_All_Targets.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(both.both.tar$r,
-                 title = "Cell Lines: GBM 6, 26 Time Points: 1h, 24h",
+                 title = "Cell Lines: GBM 6, 26 Time Points: 1 h, 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -205,7 +207,7 @@ CorrPlots <- function(){
         png('Corrplot_All_Treatments.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(both.both.txt$r,
-                 title = "Cell Lines: GBM 6, 26 Time Points: 1h, 24h",
+                 title = "Cell Lines: GBM 6, 26 Time Points: 1 h, 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -218,7 +220,7 @@ CorrPlots <- function(){
         png('Corrplot_1h_Targets.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(both.1.tar$r,
-                 title = "Cell Lines: GBM 6, 26 Time Points: 1h",
+                 title = "Cell Lines: GBM 6, 26 Time Points: 1 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -229,7 +231,7 @@ CorrPlots <- function(){
         png('Corrplot_1h_Treatments.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(both.1.txt$r,
-                 title = "Cell Lines: GBM 6, 26 Time Points: 1h",
+                 title = "Cell Lines: GBM 6, 26 Time Points: 1 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -240,7 +242,7 @@ CorrPlots <- function(){
         png('Corrplot_24h_Targets.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(both.24.tar$r,
-                 title = "Cell Lines: GBM 6, 26 Time Points: 24h",
+                 title = "Cell Lines: GBM 6, 26 Time Points: 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -251,7 +253,7 @@ CorrPlots <- function(){
         png('Corrplot_24h_Treatments.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(both.24.txt$r,
-                 title = "Cell Lines: GBM 6, 26 Time Points: 24h",
+                 title = "Cell Lines: GBM 6, 26 Time Points: 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -264,7 +266,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM6_Targets.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM6.both.tar$r,
-                 title = "Cell Lines: GBM 6 Time Points: 1h, 24h",
+                 title = "Cell Lines: GBM 6 Time Points: 1 h, 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -276,7 +278,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM6_Treatments.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM6.both.txt$r,
-                 title = "Cell Lines: GBM 6 Time Points: 1h, 24h",
+                 title = "Cell Lines: GBM 6 Time Points: 1 h, 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -287,7 +289,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM6_1h_Treatments.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM6.1.txt$r,
-                 title = "Cell Lines: GBM 6 Time Points: 1h",
+                 title = "Cell Lines: GBM 6 Time Points: 1 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -298,7 +300,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM6_1h_Targets.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM6.1.tar$r,
-                 title = "Cell Lines: GBM 6 Time Points: 1h",
+                 title = "Cell Lines: GBM 6 Time Points: 1 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -309,7 +311,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM6_24h_Targets.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM6.24.tar$r,
-                 title = "Cell Lines: GBM 6 Time Points: 24h",
+                 title = "Cell Lines: GBM 6 Time Points: 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -320,7 +322,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM6_24h_Treatments.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM6.24.txt$r,
-                 title = "Cell Lines: GBM 6 Time Points: 24h",
+                 title = "Cell Lines: GBM 6 Time Points: 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -333,7 +335,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM26_Targets.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM26.both.tar$r,
-                 title = "Cell Lines: GBM 26 Time Points: 1h, 24h",
+                 title = "Cell Lines: GBM 26 Time Points: 1 h, 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -345,7 +347,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM26_Treatments.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM26.both.txt$r,
-                 title = "Cell Lines: GBM 26 Time Points: 1h, 24h",
+                 title = "Cell Lines: GBM 26 Time Points: 1 h, 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -356,7 +358,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM26_1h_Treatments.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM26.1.txt$r,
-                 title = "Cell Lines: GBM 26 Time Points: 1h",
+                 title = "Cell Lines: GBM 26 Time Points: 1 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -367,7 +369,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM26_1h_Targets.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM26.1.tar$r,
-                 title = "Cell Lines: GBM 26 Time Points: 1h",
+                 title = "Cell Lines: GBM 26 Time Points: 1 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -378,7 +380,7 @@ CorrPlots <- function(){
         png('Corrplot_GBM26_24h_Treatments.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM26.24.txt$r,
-                 title = "Cell Lines: GBM 26 Time Points: 24h",
+                 title = "Cell Lines: GBM 26 Time Points: 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
@@ -389,11 +391,17 @@ CorrPlots <- function(){
         png('Corrplot_GBM26_24h_Targets.png', width = 16, height = 12,
             units = "in", res = 100)
         corrplot(GBM26.24.tar$r,
-                 title = "Cell Lines: GBM 26 Time Points: 24h",
+                 title = "Cell Lines: GBM 26 Time Points: 24 h",
                  method = "color",
                  diag = FALSE,
                  type = "lower",
                  tl.col = "black",
                  mar = c(1, 1, 1, 1))
         dev.off()
+}
+
+GoGoHeatmaps <- function(i){
+        DataSplitHeat()
+        HeatPlots()
+        CorrPlots()
 }

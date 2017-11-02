@@ -2,10 +2,7 @@
 CompileData <- function(){
         # load relevant libraries
         library(tidyverse)
-        
-        # get working directory to reset at end of function
-        directory <- getwd()
-        
+
         # generate list of runs and empty data frame
         filesList <- list.files(recursive = TRUE, pattern = ".csv")
         netList <- filesList[grepl("net", filesList)]
@@ -66,8 +63,35 @@ CleanData <- function(filename = 'runs.csv'){
         write_csv(df, "compiledLabeled.csv")
 }
 
+NormalizeData <- function(i){
+        library(tidyverse)
+        library(reshape2)
+        
+        setwd("D:/Box Sync/Data/")
+        dat <- read_csv("compiledLabeled.csv")
+        dat <- dat %>% mutate(n = Ring %% 4,
+                              LogTransformed = log(NetShift))
+        dat <- filter(dat, Replicate != 1)
+        
+        datScaled <- dat %>%
+                group_by(Target) %>%
+                mutate(NormLog = scale(LogTransformed),
+                       Normalized = scale(NetShift))
+        
+        cv <- function(x){sd(x)/mean(x) * 100}
+        datSum <- datScaled %>%
+                group_by(Target, CellLine, Treatment, TimePoint) %>%
+                summarize_at(vars("NetShift", "Normalized", 
+                                  "NormLog", "LogTransformed"),
+                             funs(mean, sd, cv, length))
+        
+        write_csv(datScaled, "compiledNormalized.csv")
+        write_csv(datSum, "compiledSummed.csv")
+}
+
 # Single function to run both functions above
 CompileAndProcess <- function(){
         CompileData()
         CleanData()
+        NormalizeData()
 }

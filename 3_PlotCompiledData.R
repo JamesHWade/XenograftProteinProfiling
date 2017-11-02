@@ -1,26 +1,27 @@
 ## Plot all data combined
 PlotAllData <- function(){
-        g <- ggplot(dat, aes(x = Target, y = NetShift))
+        g <- ggplot(dat, aes(x = Target, y = NormLog))
         
         all.point <- g + 
-                geom_point(aes(color = Treatment), 
+                geom_point(aes(color = factor(Replicate)),
                            position = "jitter", alpha = 0.7) +
-                facet_grid(CellLine ~ TimePoint) + 
+                facet_grid(Treatment ~ interaction(TimePoint, CellLine)) + 
                 theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
                 ggtitle("Full Dataset")
         
         
         ggsave(all.point, filename = "everything_point.png", 
-               width = 12, height = 8)
+               width = 20, height = 16)
         
         all.boxplot <- g + 
                 geom_boxplot(aes(fill = Treatment)) +
-                facet_grid(CellLine ~ TimePoint) +
+                facet_grid(Treatment ~ interaction(TimePoint, CellLine)) +
                 theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-                ggtitle("Full Dataset")
+                ggtitle("Full Dataset") +
+                ylab("Normalized Response")
         
         ggsave(all.boxplot, filename = "everything_boxplot.png",
-               width = 12, height = 8)
+               width = 20, height = 16)
 }
 
 ## Plot each target as Net Shift vs Treatment
@@ -32,7 +33,7 @@ PlotEachTarget <- function(){
                 dat.tar <- filter(dat, Target == i & Treatment != "(+)-Serum" & 
                                           Treatment != "(-)-Serum")
                 
-                g <- ggplot(dat.tar, aes(x = Treatment, y = NetShift))
+                g <- ggplot(dat.tar, aes(x = Treatment, y = NormLog))
                 
                 plotName <- unlist(strsplit(i, "/"))[1]
                 
@@ -41,12 +42,14 @@ PlotEachTarget <- function(){
                                    position = "jitter") + 
                         facet_grid(CellLine~TimePoint) +
                         ggtitle(paste0("Target: ", i)) + 
+                        ylab("Normalized Response") +
                         theme(axis.text.x = element_text(angle = 45, hjust = 1))
                 
                 target.box <- g + 
                         geom_boxplot(aes(fill = Treatment)) + 
                         facet_grid(CellLine~TimePoint) +
                         ggtitle(paste0("Target: ", i)) + 
+                        ylab("Normalized Response") +
                         theme(axis.text.x = element_text(angle = 45, hjust = 1))
                 
                 dir.create("Target Plots", showWarnings = FALSE)
@@ -71,18 +74,20 @@ PlotEachTreatment <- function(){
                 
                 dat.rx <- filter(dat, Treatment == i)
                 
-                g <- ggplot(dat.rx, aes(Target, NetShift))
+                g <- ggplot(dat.rx, aes(x = Target, y = NormLog))
                 
                 fig4 <- g + 
                         geom_point(aes(color = Target), position = "jitter") + 
                         facet_grid(CellLine~TimePoint) +
                         ggtitle(paste0("Treatment: ", i)) +
+                        ylab("Normalized Response") +
                         theme(axis.text.x = element_text(angle = 45, hjust = 1))
                 
                 fig5 <- g + 
                         geom_boxplot(aes(fill = Target)) + 
                         facet_grid(CellLine~TimePoint) +
                         ggtitle(paste0("Treatment: ", i)) +
+                        ylab("Normalized Response") +
                         theme(axis.text.x = element_text(angle = 45, hjust = 1))
                 
                 dir.create("Treatment Plots", showWarnings = FALSE)
@@ -99,7 +104,7 @@ PlotEachTreatment <- function(){
 
 ## Plot Treatments
 PlotTreatment <- function(control, treatment, targets, cellLine){
-        dat.cntl <- filter(dat, Treatment == control & TimePoint == "1 h")
+        dat.cntl <- filter(dat, Treatment == control & TimePoint == "1h")
         dat.all <- rbind(filter(dat, Treatment == treatment), dat.cntl)
         dat.all$Treatment <- factor(dat.all$Treatment, 
                                     levels = c("DMSO", "(-)-Serum", 
@@ -110,7 +115,7 @@ PlotTreatment <- function(control, treatment, targets, cellLine){
         # Plot all treatments for treatment
         g.all <- ggplot(dat.all, 
                         aes(x = interaction(TimePoint, Treatment, Target),
-                            y = NetShift, 
+                            y = NormLog, 
                             fill = Target)) +
                 geom_boxplot() + 
                 facet_grid(CellLine~.) +
@@ -118,6 +123,7 @@ PlotTreatment <- function(control, treatment, targets, cellLine){
                 scale_x_discrete(labels = rep(c("0 h", "1 h", "24 h"), 
                                               length(unique(dat.all$Target)))) +
                 xlab("Treatment Time") + 
+                ylab("Normalized Response") +
                 ggtitle(paste0("Treatment: ", treatment)) +
                 theme(axis.text.x = 
                               element_text(angle = 90, hjust = 1, vjust = 0.5))
@@ -130,19 +136,18 @@ PlotTreatment <- function(control, treatment, targets, cellLine){
         dat.rx <- filter(dat.all, Target %in% targets & 
                                  CellLine == cellLine)
         
-        g <- ggplot(dat.rx, 
-                    aes(x = interaction(TimePoint, Treatment, 
-                                        Target, CellLine), 
-                        y = NetShift, 
-                        fill = Target))
-        
-        txt <- g +
+        txt <- ggplot(dat.rx, 
+                      aes(x = interaction(TimePoint, Treatment, 
+                                          Target, CellLine), 
+                          y = NormLog, 
+                          fill = Target)) +
                 geom_boxplot() + 
                 labs(fill = "") + 
                 scale_x_discrete(labels = rep(c("0 h", "1 h", "24 h"), 
                                               length(targets))) +
                 xlab("Treatment Time") + 
-                ggtitle(paste0("Treatment: ", treatment, ", GBM 6")) +
+                ylab("Normalized Response") +
+                ggtitle(paste("Treatment:", treatment, cellLine)) +
                 theme(axis.text.x = 
                               element_text(angle = 90, hjust = 1, vjust = 0.5))
         
@@ -161,12 +166,13 @@ TreatmentComp <- function(treatments, targets, cellLine){
                                 group = interaction(Treatment, 
                                                     TimePoint,
                                                     Target),
-                                y = NetShift))
+                                y = NormLog))
         
         fig_comp <- g + 
                 geom_boxplot(aes(fill = interaction(Treatment, TimePoint))) + 
                 labs(fill = "") + 
                 xlab("Target") + 
+                ylab("Normalized Response") +
                 ggtitle(paste0(treatments[1], " vs ", treatments[2])) +
                 theme(axis.text.x = 
                               element_text(angle = 45, hjust = 1))
@@ -176,6 +182,7 @@ TreatmentComp <- function(treatments, targets, cellLine){
                 facet_wrap(~TimePoint) + 
                 labs(fill = "") + 
                 xlab("Target") + 
+                ylab("Normalized Response") +
                 ggtitle(paste0(treatments[1], " vs ", treatments[2])) +
                 theme(axis.text.x = element_text(angle = 45, hjust = 1))
         
@@ -191,22 +198,43 @@ TreatmentComp <- function(treatments, targets, cellLine){
                width = 8, height = 6)
 }
 
+Cytometry <- function(){
+        dir.create("Cytometry", showWarnings = FALSE)
+        dat.rx <- filter(dat, !grepl("Serum", Treatment))
+        pairList <- t(combn(unique(dat$Target), 2))
+        for(i in seq_len(nrow(pairList))){
+                targets <- pairList[i, ]
+                cytDat <- filter(dat.rx, Target %in% pairList[i, ])
+                cytCast <- dcast(data = cytDat, Treatment + CellLine + 
+                                         TimePoint + Replicate + n ~ Target,
+                                 value.var = "NormLog")
+                
+                plot <- ggplot(cytCast, aes(x = cytCast[, 6], 
+                                    y = cytCast[, 7],
+                                    color = interaction(CellLine, TimePoint,
+                                                        Treatment))) +
+                                    # color = TimePoint)) +
+                        geom_point() +
+                        labs(color = "", x = pairList[i,1], y = pairList[i,2])
+                
+                tar1 <- substr(pairList[i,1], 1, 9)
+                tar2 <- substr(pairList[i,2], 1, 9)
+                ggsave(plot, filename = paste0("Cytometry/", tar1, " vs ", 
+                                               tar2, ".png"),
+                       width = 8, height = 6)
+        }
+}
+
 ## Run all of the above functions to generate plots
 PlotData <- function(){
-        setwd("D:/Box Sync/Data/")
-        
         # Load libraries and set theme for all plots
         library(tidyverse)
         library(ggthemes)
         theme_set(theme_few(base_size = 16))
         
         # Load in data to make plots
-        dat <<- read_csv("compiledLabeled.csv")
-        dat$Treatment <- factor(dat$Treatment, 
-                                levels = c("DMSO", "(-)-Serum", 
-                                           "Apitolisib", "Erlotinib",
-                                           "Palbociclib", "GNE-317",
-                                           "(+)-Serum"))
+        setwd("D:/Box Sync/Data/")
+        dat <<- read_csv("compiledNormalized.csv")
         
         # Save current wd to return to later and setwd to plots folder
         directory <- getwd()
@@ -229,8 +257,6 @@ PlotData <- function(){
                 PlotTreatment(control = control, treatment = i,
                               targets = compTargets, cellLine = "GBM26")
         })
-        
-        
         
         # Pairwise treatment list
         txtPairs <- combn(unique(dat$Treatment), 2, simplify = FALSE)
