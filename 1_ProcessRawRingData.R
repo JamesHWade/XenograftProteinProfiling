@@ -10,7 +10,7 @@ GetName <- function(){
         name <<- gsub('gask','',name) # removes "gask" from name
 }
 
-AggData <- function(loc = 'plots', filename = 'groupNames_XPP.csv') {
+AggData <- function(loc, filename, fsr, fsrThresh = 3000) {
         # load relevant libraries
         library(tidyverse)
         
@@ -33,10 +33,7 @@ AggData <- function(loc = 'plots', filename = 'groupNames_XPP.csv') {
         targets <- recipe$Target
         
         # generate list of rings to analyze (gets all *.csv files)
-        rings <- list.files(directory, pattern = ".csv", recursive = FALSE)
-        idfile <- grepl("group", rings)
-        removeFiles <- c("comments.csv", rings[idfile])
-        rings <- rings[!rings %in% removeFiles]
+        rings <- list.files(directory, pattern = "[[:digit:]].csv", recursive = FALSE)
         
         # add data to data frame corresponding for each ring in rings
         df <- lapply(rings, function(i){
@@ -53,6 +50,21 @@ AggData <- function(loc = 'plots', filename = 'groupNames_XPP.csv') {
                 tmp
         })
         
+        # correct for fsr
+        if(fsr){
+                for(i in seq_len(length(df))){
+                        pointShift <- 0
+                        for(j in seq_len(nrow(df[[i]]))){
+                                shiftDiff <- pointShift - df[[i]][j, 2]
+                                if(shiftDiff > fsrThresh){
+                                        print("fuck, an fsr---kill it---got it")
+                                        df[[i]][j, 2] <- df[[i]][j, 2] + 5980
+                                }
+                                pointShift <- df[[i]][j, 2]
+                        }
+                }
+        }
+        
         # combine data from list into single data frame
         df <- bind_rows(df)
         
@@ -60,21 +72,14 @@ AggData <- function(loc = 'plots', filename = 'groupNames_XPP.csv') {
         names(df) <- c("Time", "Shift", "Ring", "Group", "Target", "Channel",
                        "Experiment", "Time Point")
         
-        for (i in seq_len(nrow(df))){
-                nxtPnt <- df[i, Shift] - df[i+1, Shift]
-                if(nxtPnt == ){
-                        
-                }
-        }
-        
         # creates "plots" directory
         dir.create(loc, showWarnings = FALSE)
         
         # saves aggregated data with name_allRings.csv
-        write_csv(df, paste(loc, '/', name, "_allRings.csv", sep=""))
+        write_csv(df, paste0(loc, '/', name, "_allRings.csv"))
 }
 
-SubtractControl <- function(loc = 'plots', ch, cntl){
+SubtractControl <- function(loc, ch, cntl){
         #load relevant libraries
         library(tidyverse)
         
@@ -100,7 +105,7 @@ SubtractControl <- function(loc = 'plots', ch, cntl){
                                   ch, ".csv", sep = ''))   
 }
 
-PlotRingData <- function(cntl, ch, loc = 'plots', splitPlot = FALSE){
+PlotRingData <- function(cntl, ch, loc, splitPlot = FALSE){
         # loads relevant libraries and plot theme
         library(tidyverse)
         library(ggthemes)
@@ -161,7 +166,7 @@ PlotRingData <- function(cntl, ch, loc = 'plots', splitPlot = FALSE){
                width = 10, height = 6)
 }
 
-GetNetShifts <- function(cntl, ch, loc = 'plots', time1, time2, step = 1){
+GetNetShifts <- function(cntl, ch, loc, time1, time2, step = 1){
         # load relevant libraries
         library(tidyverse)
         
@@ -206,7 +211,7 @@ GetNetShifts <- function(cntl, ch, loc = 'plots', time1, time2, step = 1){
                                     "cntl_", "ch", ch, "_step", step, ".csv"))
 }
 
-PlotNetShifts <- function(cntl, ch, loc = 'plots', step = 1){
+PlotNetShifts <- function(cntl, ch, loc, step = 1){
         # load relevant libraries and plot theme
         library(tidyverse)
         library(ggthemes)
@@ -248,7 +253,7 @@ PlotNetShifts <- function(cntl, ch, loc = 'plots', step = 1){
                width = 12, height = 6)
 }
 
-CheckRingQuality <- function(loc = 'plots', time1, time2, nrings = 10) {
+CheckRingQuality <- function(loc, time1, time2, nrings = 10) {
         # load relevant libraries
         library(tidyverse)
         library(ggthemes)
@@ -285,24 +290,27 @@ CheckRingQuality <- function(loc = 'plots', time1, time2, nrings = 10) {
                width = 8, height = 6)
 }
 
-AnalyzeData <- function(time1 = 51, time2 = 39) {
+AnalyzeData <- function(time1 = 51, time2 = 39, 
+                        filename = "groupNames_LTBI.csv",
+                        loc = "plots",
+                        fsr = TRUE) {
         GetName()
-        AggData(filename = "groupNames_LTBI.csv")
-        SubtractControl(ch = 1, cntl = "thermal")
-        SubtractControl(ch = 2, cntl = "thermal")
-        SubtractControl(ch = "U", cntl = "thermal")
-        PlotRingData(cntl = "raw", ch = "U", splitPlot = TRUE)
-        PlotRingData(cntl = "thermal", ch = "U", splitPlot = TRUE)
-        PlotRingData(cntl = "thermal", ch = 1, splitPlot = FALSE)
-        PlotRingData(cntl = "raw", ch = 1, splitPlot = FALSE)
-        PlotRingData(cntl = "thermal", ch = 2, splitPlot = FALSE)
-        PlotRingData(cntl = "raw", ch = 2, splitPlot = FALSE)
+        AggData(filename = filename, loc = loc, fsr = fsr)
+        SubtractControl(ch = 1, cntl = "thermal", loc = loc)
+        SubtractControl(ch = 2, cntl = "thermal", loc = loc)
+        SubtractControl(ch = "U", cntl = "thermal", loc = loc)
+        PlotRingData(cntl = "raw", ch = "U", splitPlot = TRUE, loc = loc)
+        PlotRingData(cntl = "thermal", ch = "U", splitPlot = TRUE, loc = loc)
+        PlotRingData(cntl = "thermal", ch = 1, splitPlot = FALSE, loc = loc)
+        PlotRingData(cntl = "raw", ch = 1, splitPlot = FALSE, loc = loc)
+        PlotRingData(cntl = "thermal", ch = 2, splitPlot = FALSE, loc = loc)
+        PlotRingData(cntl = "raw", ch = 2, splitPlot = FALSE, loc = loc)
         GetNetShifts(cntl = "thermal", ch = 1, 
-                     time1 = time1, time2 = time2, step = 1)
+                     time1 = time1, time2 = time2, step = 1, loc = loc)
         GetNetShifts(cntl = "thermal", ch = 2,
-                     time1 = time1, time2 = time2, step = 1)
-        PlotNetShifts(cntl = "thermal", ch = 1, step = 1)
-        PlotNetShifts(cntl = "thermal", ch = 2, step = 1)
+                     time1 = time1, time2 = time2, step = 1, loc = loc)
+        PlotNetShifts(cntl = "thermal", ch = 1, step = 1, loc = loc)
+        PlotNetShifts(cntl = "thermal", ch = 2, step = 1, loc = loc)
         # CheckRingQuality(time1 = 20, time2 = 30)
         # shell.exec("https://youtu.be/dQw4w9WgXcQ")
 }
