@@ -1,133 +1,133 @@
-Target	Group	Ring	Channel
-thermal	1	3	1
-thermal	1	135	1
-miR let 7f	2	5	1
-miR let 7f	2	6	1
-miR let 7f	2	7	1
-miR let 7f	2	8	1
-Ignore	3	9	2
-Ignore	3	10	2
-Ignore	3	11	2
-Ignore	3	12	2
-Ignore	4	13	1
-Ignore	4	14	1
-Ignore	4	15	1
-Ignore	4	16	1
-miR 219	5	17	2
-miR 219	5	18	2
-miR 219	5	19	2
-miR 219	5	20	2
-Ignore	6	21	1
-Ignore	6	22	1
-Ignore	6	23	1
-Ignore	6	24	1
-miR 132	7	25	2
-miR 132	7	26	2
-miR 132	7	27	2
-miR 132	7	28	2
-Ignore	8	29	1
-Ignore	8	30	1
-Ignore	8	31	1
-Ignore	8	32	1
-Ignore	9	33	2
-Ignore	9	34	2
-Ignore	9	35	2
-Ignore	9	36	2
-miR 10b	10	37	1
-miR 10b	10	38	1
-miR 10b	10	39	1
-miR 10b	10	40	1
-Ignore	11	41	2
-Ignore	11	42	2
-Ignore	11	43	2
-Ignore	11	44	2
-miR 29a	12	45	1
-miR 29a	12	46	1
-miR 29a	12	47	1
-miR 29a	12	48	1
-Ignore	13	49	2
-Ignore	13	50	2
-Ignore	13	51	2
-Ignore	13	52	2
-Ignore	14	53	1
-Ignore	14	54	1
-Ignore	14	55	1
-Ignore	14	56	1
-miR 106a	15	57	2
-miR 106a	15	58	2
-miR 106a	15	59	2
-miR 106a	15	60	2
-miR 221	16	61	1
-miR 221	16	62	1
-miR 221	16	63	1
-miR 221	16	64	1
-Ignore	17	65	2
-Ignore	17	66	2
-Ignore	17	67	2
-Ignore	17	68	2
-Ignore	18	69	1
-Ignore	18	70	1
-Ignore	18	71	1
-Ignore	18	72	1
-Ignore	19	73	2
-Ignore	19	74	2
-Ignore	19	75	2
-Ignore	19	76	2
-Ignore	20	77	1
-Ignore	20	78	1
-Ignore	20	79	1
-Ignore	20	80	1
-miR 335	21	81	2
-miR 335	21	82	2
-miR 335	21	83	2
-miR 335	21	84	2
-miR 124	22	85	1
-miR 124	22	86	1
-miR 124	22	87	1
-miR 124	22	88	1
-Ignore	23	89	2
-Ignore	23	90	2
-Ignore	23	91	2
-Ignore	23	92	2
-Ignore	24	93	1
-Ignore	24	94	1
-Ignore	24	95	1
-Ignore	24	96	1
-miR 222	25	97	2
-miR 222	25	98	2
-miR 222	25	99	2
-miR 222	25	100	2
-miR 21 	26	101	1
-miR 21	26	102	1
-miR 21	26	103	1
-miR 21	26	104	1
-Ignore	27	105	2
-Ignore	27	106	2
-Ignore	27	107	2
-Ignore	27	108	2
-miR 34a	28	109	1
-miR 34a	28	110	1
-miR 34a	28	111	1
-miR 34a	28	112	1
-Ignore	29	113	2
-Ignore	29	114	2
-Ignore	29	115	2
-Ignore	29	116	2
-Ignore	30	117	1
-Ignore	30	118	1
-Ignore	30	119	1
-Ignore	30	120	1
-miR 155	31	121	2
-miR 155	31	122	2
-miR 155	31	123	2
-miR 155	31	124	2
-Control	32	125	1
-Control	32	126	1
-Control	32	127	1
-Control	32	128	1
-Control	33	129	2
-Control	33	130	2
-Control	33	131	2
-Control	33	132	2
-thermal	34	4	2
-thermal	34	136	2
+Target,Group,Ring,Channel
+thermal,1,3,1
+thermal,1,135,1
+miR let 7f,2,5,1
+miR let 7f,2,6,1
+miR let 7f,2,7,1
+miR let 7f,2,8,1
+Ignore,3,9,2
+Ignore,3,10,2
+Ignore,3,11,2
+Ignore,3,12,2
+Ignore,4,13,1
+Ignore,4,14,1
+Ignore,4,15,1
+Ignore,4,16,1
+miR 219,5,17,2
+miR 219,5,18,2
+miR 219,5,19,2
+miR 219,5,20,2
+Ignore,6,21,1
+Ignore,6,22,1
+Ignore,6,23,1
+Ignore,6,24,1
+miR 132,7,25,2
+miR 132,7,26,2
+miR 132,7,27,2
+miR 132,7,28,2
+Ignore,8,29,1
+Ignore,8,30,1
+Ignore,8,31,1
+Ignore,8,32,1
+Ignore,9,33,2
+Ignore,9,34,2
+Ignore,9,35,2
+Ignore,9,36,2
+miR 10b,10,37,1
+miR 10b,10,38,1
+miR 10b,10,39,1
+miR 10b,10,40,1
+Ignore,11,41,2
+Ignore,11,42,2
+Ignore,11,43,2
+Ignore,11,44,2
+miR 29a,12,45,1
+miR 29a,12,46,1
+miR 29a,12,47,1
+miR 29a,12,48,1
+Ignore,13,49,2
+Ignore,13,50,2
+Ignore,13,51,2
+Ignore,13,52,2
+Ignore,14,53,1
+Ignore,14,54,1
+Ignore,14,55,1
+Ignore,14,56,1
+miR 106a,15,57,2
+miR 106a,15,58,2
+miR 106a,15,59,2
+miR 106a,15,60,2
+miR 221,16,61,1
+miR 221,16,62,1
+miR 221,16,63,1
+miR 221,16,64,1
+Ignore,17,65,2
+Ignore,17,66,2
+Ignore,17,67,2
+Ignore,17,68,2
+Ignore,18,69,1
+Ignore,18,70,1
+Ignore,18,71,1
+Ignore,18,72,1
+Ignore,19,73,2
+Ignore,19,74,2
+Ignore,19,75,2
+Ignore,19,76,2
+Ignore,20,77,1
+Ignore,20,78,1
+Ignore,20,79,1
+Ignore,20,80,1
+miR 335,21,81,2
+miR 335,21,82,2
+miR 335,21,83,2
+miR 335,21,84,2
+miR 124,22,85,1
+miR 124,22,86,1
+miR 124,22,87,1
+miR 124,22,88,1
+Ignore,23,89,2
+Ignore,23,90,2
+Ignore,23,91,2
+Ignore,23,92,2
+Ignore,24,93,1
+Ignore,24,94,1
+Ignore,24,95,1
+Ignore,24,96,1
+miR 222,25,97,2
+miR 222,25,98,2
+miR 222,25,99,2
+miR 222,25,100,2
+miR 21 ,26,101,1
+miR 21,26,102,1
+miR 21,26,103,1
+miR 21,26,104,1
+Ignore,27,105,2
+Ignore,27,106,2
+Ignore,27,107,2
+Ignore,27,108,2
+miR 34a,28,109,1
+miR 34a,28,110,1
+miR 34a,28,111,1
+miR 34a,28,112,1
+Ignore,29,113,2
+Ignore,29,114,2
+Ignore,29,115,2
+Ignore,29,116,2
+Ignore,30,117,1
+Ignore,30,118,1
+Ignore,30,119,1
+Ignore,30,120,1
+miR 155,31,121,2
+miR 155,31,122,2
+miR 155,31,123,2
+miR 155,31,124,2
+Control,32,125,1
+Control,32,126,1
+Control,32,127,1
+Control,32,128,1
+Control,33,129,2
+Control,33,130,2
+Control,33,131,2
+Control,33,132,2
+thermal,34,4,2
+thermal,34,136,2

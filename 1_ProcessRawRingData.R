@@ -19,15 +19,17 @@ AggData <- function(loc = 'plots', filename = 'groupNames_XPP.csv') {
         
         # get information of chip layout from github repository
         if (!file.exists(filename)){
-                git <- "https://raw.githubusercontent.com/JamesHWade/XenograftProteinProfiling/master/"
-                url <- paste0(git, filename)
+                git <- "https://raw.githubusercontent.com/"
+                hub <- "JamesHWade/XenograftProteinProfiling/master/"
+                github <- paste0(git, hub)
+                url <- paste0(github, filename)
                 filename <- basename(url)
                 download.file(url, filename)
         }
         
         # read in recipe/chip layout
         recipe <- read_csv(filename)
-        colnames(recipe)[1] <- "Target" # rename column to remove byte order mark
+        colnames(recipe)[1] <- "Target" # rename col & remove byte order mark
         targets <- recipe$Target
         
         # generate list of rings to analyze (gets all *.csv files)
@@ -58,6 +60,13 @@ AggData <- function(loc = 'plots', filename = 'groupNames_XPP.csv') {
         names(df) <- c("Time", "Shift", "Ring", "Group", "Target", "Channel",
                        "Experiment", "Time Point")
         
+        for (i in seq_len(nrow(df))){
+                nxtPnt <- df[i, Shift] - df[i+1, Shift]
+                if(nxtPnt == ){
+                        
+                }
+        }
+        
         # creates "plots" directory
         dir.create(loc, showWarnings = FALSE)
         
@@ -83,12 +92,12 @@ SubtractControl <- function(loc = 'plots', ch, cntl){
         dat.cntl <- mutate(dat, Shift = Shift - Cntl)
         
         # remove control column and control rings
-        dat.cntl <- filter(dat.cntl, Target != cntl)
+        dat.cntl <- filter(dat.cntl, Target != cntl & Target != "thermal")
         dat.cntl$Cntl <- NULL
         
         # save data to new file
-        write_csv(dat.cntl, paste(loc,"/", name, "_", cntl, "Control", "_ch", ch, 
-                             ".csv", sep = ''))   
+        write_csv(dat.cntl, paste(loc,"/", name, "_", cntl, "Control", "_ch",
+                                  ch, ".csv", sep = ''))   
 }
 
 PlotRingData <- function(cntl, ch, loc = 'plots', splitPlot = FALSE){
@@ -166,7 +175,7 @@ GetNetShifts <- function(cntl, ch, loc = 'plots', time1, time2, step = 1){
         
         # generate list of rings and empty dataframe to store net shift data
         ringList <- unique(dat$Ring)
-
+        
         # locations for each time is determined using which, min, and abs func
         dat.rings <- lapply(ringList, function(i){
                 dat.ring <- filter(dat, Ring == i)
@@ -193,8 +202,8 @@ GetNetShifts <- function(cntl, ch, loc = 'plots', time1, time2, step = 1){
                 mutate(NetShift = Shift.1 - Shift.2)
         
         # save net shift data
-        write_csv(dat.rings, paste0(loc, "/", name, "_netShifts_", cntl, "cntl_",
-                                    "ch", ch, "_step", step, ".csv"))
+        write_csv(dat.rings, paste0(loc, "/", name, "_netShifts_", cntl,
+                                    "cntl_", "ch", ch, "_step", step, ".csv"))
 }
 
 PlotNetShifts <- function(cntl, ch, loc = 'plots', step = 1){
@@ -202,9 +211,9 @@ PlotNetShifts <- function(cntl, ch, loc = 'plots', step = 1){
         library(tidyverse)
         library(ggthemes)
         theme_set(theme_few(base_size = 16))
-
+        
         dat <- read_csv(paste0(loc, "/", name, "_netShifts_", cntl, "cntl_",
-                                       "ch", ch, "_step", step, ".csv"))
+                               "ch", ch, "_step", step, ".csv"))
         
         # configure plot and legend
         dat.nothermal <- filter(dat, Target != "thermal")
@@ -222,7 +231,8 @@ PlotNetShifts <- function(cntl, ch, loc = 'plots', step = 1){
                                fill = Target)) +
                 geom_bar(stat = "identity") +
                 theme(axis.text.x = 
-                              element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+                              element_text(angle = 90,
+                                           hjust = 1, vjust = 0.5)) +
                 ylab(expression(paste("Net Shift (",Delta,"pm)"))) + 
                 xlab("Ring") +
                 ggtitle(paste0(name, " Ch: ", ch, " Control: ", cntl))
@@ -238,30 +248,46 @@ PlotNetShifts <- function(cntl, ch, loc = 'plots', step = 1){
                width = 12, height = 6)
 }
 
-CheckRingQuality <- function(loc = 'plots', time1, time2, varLevel = 100) {
+CheckRingQuality <- function(loc = 'plots', time1, time2, nrings = 10) {
         # load relevant libraries
         library(tidyverse)
+        library(ggthemes)
         
         # read in data and subset for a flat part of the run
         dat <- read_csv(paste0(loc,"/", name, "_allRings.csv"))
         dat <- subset(dat, Time > time1 & Time < time2)
         
-        # calculate variance for each ring
-        dat.avg <- dat %>% group_by(Ring) %>%
-                summarise_at(vars(Shift), funs(var))
+        # fn to take absolute value of max signal
+        absmax <- function(x) { x[which.max( abs(x) )]}
+        
+        # calculate variance and max signal for each ring
+        dat.var <- dat %>% group_by(Ring) %>%
+                summarise_at(vars(Shift), funs(Variance = var, Max = absmax))
+        
+        # plot Variance vs Max signal (on log axis)
+        g1 <- ggplot(dat.var, aes(x = Variance, y = Max, 
+                                  color = factor(Ring))) + 
+                geom_point() + 
+                scale_x_log10() + scale_y_log10()
         
         # create variables for rings with variance above/below given variance
-        ringWinners <- filter(dat.avg, Shift < varLevel) %>% select(Ring)
-        ringLosers <- filter(dat.avg, Shift > varLevel) %>% select(Ring)
+        ringWinners <- arrange(dat.var, Variance) %>% select(Ring) %>% 
+                head(nrings)
+        ringLosers <- arrange(dat.var, Variance) %>% select(Ring) %>% 
+                tail(nrings)
         
         # save files with list of good and bad rings base on given variance
         write_csv(ringWinners, paste0(loc, '/', name, "_ringWinners.csv"))
         write_csv(ringLosers, paste0(loc, '/', name, "_ringLosers.csv"))
+        
+        # save plot generated above
+        ggsave(g1, filename = "Variance vs Max Signal.png",
+               width = 8, height = 6)
 }
 
-AnalyzeData <- function() {
+AnalyzeData <- function(time1 = 51, time2 = 39) {
         GetName()
-        AggData(filename = "groupNames_XPP.csv")
+        AggData(filename = "groupNames_LTBI.csv")
         SubtractControl(ch = 1, cntl = "thermal")
         SubtractControl(ch = 2, cntl = "thermal")
         SubtractControl(ch = "U", cntl = "thermal")
@@ -271,11 +297,13 @@ AnalyzeData <- function() {
         PlotRingData(cntl = "raw", ch = 1, splitPlot = FALSE)
         PlotRingData(cntl = "thermal", ch = 2, splitPlot = FALSE)
         PlotRingData(cntl = "raw", ch = 2, splitPlot = FALSE)
-        GetNetShifts(cntl = "thermal", ch = 1, time1 = 51, time2 = 39, step = 1)
-        GetNetShifts(cntl = "thermal", ch = 2, time1 = 51, time2 = 39, step = 1)
+        GetNetShifts(cntl = "thermal", ch = 1, 
+                     time1 = time1, time2 = time2, step = 1)
+        GetNetShifts(cntl = "thermal", ch = 2,
+                     time1 = time1, time2 = time2, step = 1)
         PlotNetShifts(cntl = "thermal", ch = 1, step = 1)
         PlotNetShifts(cntl = "thermal", ch = 2, step = 1)
-        CheckRingQuality(time1 = 20, time2 = 30)
+        # CheckRingQuality(time1 = 20, time2 = 30)
         # shell.exec("https://youtu.be/dQw4w9WgXcQ")
 }
 

@@ -5,12 +5,14 @@ library(tidyverse)
 library(reshape2)
 
 setwd("D:/Box Sync/Data/")
-datScaled <- read_csv("compiledNormalized.csv")
-datScaled <- filter(datScaled, Target != "h-HIF1aPro564" &
-                            Target != "pp53Ser15" &
-                            Target != "pc-AblTyr204" &
-                            Target != "pGSK3bSer9")
-datSum <- read_csv("compiledSummed.csv")
+datScaled <- read_csv("compiledNormalized.csv") %>%
+  filter(Treatment != "(+)-Serum" & Treatment != "(-)-Serum")
+# datScaled <- filter(datScaled, Target != "h-HIF1aPro564" &
+#                             Target != "pp53Ser15" &
+#                             Target != "pc-AblTyr204" &
+#                             Target != "pGSK3bSer9")
+datSum <- read_csv("compiledSummed.csv") %>%
+  filter(Treatment != "(+)-Serum" & Treatment != "(-)-Serum")
 
 # Assess data normality ---------------------------------------------------
 
@@ -152,7 +154,9 @@ ldaFit$TimePoint <- castLDA$TimePoint
 ggplot(ldaFit, aes(x = LD1, y = LD2, 
                    color = Treatment, fill = Treatment,
                    shape = interaction(CellLine, TimePoint))) +
-        geom_point(size = 3, alpha = 0.8)
+        geom_point(size = 3, alpha = 0.8) +
+  labs(x = "LD1 - 44.92% Explained", y = "LD2 - 14.39%", shape = "",
+       color = "")
 
 fit2 <- lda(ID ~ ., data=castLDA2, CV = TRUE)
 
@@ -205,9 +209,9 @@ interaction.plot(x.factor = interaction(Treatment, TimePoint, CellLine),
                  trace.factor = Target, col = c(1:12), lty = 1,
                  response = NormLog)
 
-ggplot(datSum, aes(x = interaction(Treatment, TimePoint, CellLine),
+ggplot(datSum, aes(x = interaction(Treatment, TimePoint,  CellLine),
                    y = NormLog_mean, group = Target, color = Target)) +
-        geom_line() + coord_flip()
+        geom_line() + coord_flip() + labs(y = "Z-score", x = "")
 
 # Protein Pairs -----------------------------------------------------------
 
