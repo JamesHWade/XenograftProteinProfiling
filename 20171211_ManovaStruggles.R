@@ -4,14 +4,19 @@ rm( list = ls() )
 library(tidyverse)
 library(reshape2)
 
+plotTheme <- theme_classic(base_size = 16) + 
+        theme(panel.background = element_rect(fill = "transparent"),
+              plot.background = element_rect(fill = "transparent"),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              legend.background = element_rect(fill = "transparent"),
+              legend.box.background = element_rect(fill = "transparent"))
+
+theme_set(plotTheme)
+
 setwd("D:/Box Sync/XPP_Data/")
 datScaled <- read_csv("compiledNormalized.csv")
-# datScaled <- filter(datScaled, Target != "h-HIF1aPro564" &
-#                             Target != "pp53Ser15" &
-#                             Target != "pc-AblTyr204" &
-#                             Target != "pGSK3bSer9")
-datSum <- read_csv("compiledSummed.csv") %>%
-        filter(Treatment != "(+)-Serum" & Treatment != "(-)-Serum")
+datSum <- read_csv("compiledSummed.csv")
 
 # Assess data normality ---------------------------------------------------
 
@@ -24,7 +29,7 @@ hist(datScaled$Normalized, breaks = 25, main = "Normalized")
 hist(datScaled$LogTransformed, breaks = 25, main = "Log Transformed")
 hist(datScaled$NormLog, breaks = 25, main = "Normalized & Log Transformed")
 hist(rnorm(4994), breaks = 25, main = "Normal Distribution")
-dev.print(png,"Histograms of Data Transformations.png", width=8, height=6, 
+dev.print(png,"Histograms of Data Transformations.png", width=8, height=6,
           unit = "in", res = 200)
 dev.off()
 
@@ -36,13 +41,11 @@ qqnorm(y, main = "Log Transformed"); qqline(y)
 z = datScaled$NormLog
 qqnorm(z, main = "Log Transformed & Normalized"); qqline(z)
 qqnorm(rnorm(4994), main = "Normal Distribution"); qqline(z)
-dev.print(png,"QQ Plots of Data Transformations.png", width=8, height=6, 
+dev.print(png,"QQ Plots of Data Transformations.png", width=8, height=6,
           unit = "in", res = 200)
 dev.off()
 
 # Pair-wise data comparison -----------------------------------------------
-
-theme_set(theme_classic(base_size = 16))
 
 cast <- dcast(data = datScaled, Treatment + CellLine + TimePoint +
                       Replicate + n ~ Target,
@@ -119,7 +122,7 @@ for(i in seq_len(nrow(pairTarList))){
         manList[[i]] <- manResult
 }
 
-pairwise.t.test(cast$pAktSer473,cast$Treatment)#, p.adjust.method = "bonferroni")
+# pairwise.t.test(cast$pAktSer473,cast$Treatment)#, p.adjust.method = "bonferroni")
 
 aovDat <- bind_rows(aovList)
 aovDat <- aovDat[complete.cases(aovDat), ]
@@ -142,6 +145,28 @@ castLDA2 <-castLDA[, -c(1:5)]
 
 fit <- lda(ID ~ ., data=castLDA2)
 
+ldaSVD <- fit$svd^2/sum(fit$svd^2)
+ldaScale <- tibble::rownames_to_column(data.frame(fit$scaling))
+meltLDAScale <- melt(data = ldaScale,
+                measure.vars = c("LD1", "LD2"),
+                id.vars = "rowname")
+
+ldaScaling <- ggplot(meltLDAScale, aes(x = rowname, y = value, color = variable)) +
+        geom_point(size = 2) + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        labs(x = "", y = "Loadings", color = "",
+             legend.position = "bottom")
+ggsave(plot = ldaScaling, filename = "LDA Scalings.png",
+       width = 8, height = 6)
+
+
+plot(ldaSVD, pch = 19,
+     xlab = "Linear Discriminant",
+     ylab = "Proportion Explained by LD")
+dev.print(png,"SVD Plot from LDA.png", width=8, height=6, 
+          unit = "in", res = 200)
+dev.off()
+
 fit.values <- predict(fit)
 ldaFit <- as.data.frame(fit.values$x)
 ldaFit$Treatment <- castLDA$Treatment
@@ -150,14 +175,38 @@ ldaFit$TimePoint <- castLDA$TimePoint
 
 # what about classifying by type of target (e.g., these both hit PI3K)
 
-ggplot(ldaFit, aes(x = LD1, y = LD2, 
-                   color = Treatment,
-                   shape = interaction(CellLine, TimePoint))) +
+ldaPlot1 <- ggplot(ldaFit, aes(x = LD1, y = LD2, 
+                           color = Treatment,
+                           shape = interaction(CellLine, TimePoint))) +
         geom_point(size = 3, alpha = 0.8) +
-        labs(x = "LD1 - 42.2 % Explained", 
-             y = "LD2 - 12.11% Explained",
-             shape = "",
-             color = "")
+        labs(color = "", shape = "")
+        
+ggsave(plot = ldaPlot1, filename = "LDA_ColorByTreatment.png", 
+       width = 10, height = 6)
+
+ldaPlot2 <- ggplot(ldaFit, aes(x = LD1, y = LD2, 
+                           color = interaction(CellLine, TimePoint))) +
+        geom_point(size = 3, alpha = 0.8) +
+        labs(color = "") + theme(legend.position = c(0.1, 0.9))
+
+ggsave(plot = ldaPlot2, filename = "LDA_ColorByCLTP.png", 
+       width = 10, height = 6)
+
+ldaPlot3 <- ggplot(ldaFit, aes(x = LD1, y = LD2, 
+                               color = CellLine)) +
+        geom_point(size = 3, alpha = 0.8) +
+        labs(color = "") + theme(legend.position = c(0.1, 0.9))
+
+ggsave(plot = ldaPlot3, filename = "LDA_ColorByCL.png", 
+       width = 10, height = 6)
+
+ldaPlot4 <- ggplot(ldaFit, aes(x = LD1, y = LD2, 
+                               color = TimePoint)) +
+        geom_point(size = 3, alpha = 0.8) +
+        labs(color = "") + theme(legend.position = c(0.1, 0.9))
+
+ggsave(plot = ldaPlot4, filename = "LDA_ColorByTP.png", 
+       width = 10, height = 6)
 
 fit2 <- lda(ID ~ ., data=castLDA2, CV = TRUE)
 
@@ -168,6 +217,58 @@ diag(prop.table(ct, 1))
 # total percent correct
 sum(diag(prop.table(ct)))
 
+
+# PCA  --------------------------------------------------------------------
+library(ggfortify)
+library(reshape2)
+castLDA3 <- castLDA2
+castID <- castLDA2$ID
+castLDA3$ID <- NULL
+fitPCA <- prcomp(castLDA3)
+loading <- tibble::rownames_to_column(data.frame(fitPCA$rotation))
+svd <- svd(castLDA3)
+pcaSVD <- svd$d^2/sum(svd$d^2)
+plot(pcaSVD,
+     ylab = "Proportion of Variance Explained",
+     xlab = "Principle Component",
+     pch = 19)
+dev.print(png, "SVD Plot from PCA.png", width=8, height=6, 
+          unit = "in", res = 200)
+dev.off()
+
+plot(log(pcaSVD)~log(ldaSVD), pch = 19, xlab = "LDA SVD", ylab = "PCA SVD")
+qqline(y = x)
+dev.print(png, "SVD Comparison.png", width=8, height=6, 
+          unit = "in", res = 200)
+dev.off()
+
+loadDat <- melt(data = loading,
+                measure.vars = c("PC1", "PC2"),
+                id.vars = "rowname")
+
+loadPlots <- ggplot(loadDat, aes(x = rowname, y = value, color = variable)) +
+        geom_point(size = 2) + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        labs(x = "", y = "Loadings", color = "",
+             legend.position = "bottom")
+
+ggsave(plot = loadPlots, filename = "PCA Loadings.png",
+       width = 8, height = 6)
+
+pcaCL <- autoplot(prcomp(castLDA[, 6:20]), data = castLDA,
+                  colour = "CellLine")
+pcaTP <- autoplot(prcomp(castLDA[, 6:20]), data = castLDA,
+                  colour = "TimePoint")
+pcaRX <- autoplot(prcomp(castLDA[, 6:20]), data = castLDA,
+                  colour = "Treatment")
+
+ggsave(plot = pcaCL, filename = "PCA by Cell Line.png",
+       width = 10, height = 6)
+ggsave(plot = pcaTP, filename = "PCA by Time Point.png",
+       width = 10, height = 6)
+ggsave(plot = pcaRX, filename = "PCA by Treatment.png",
+       width = 10, height = 6)
+
 # Hotelling T2 Test -------------------------------------------------------
 
 library(Hotelling)
@@ -177,26 +278,34 @@ timePointList <- unique(datScaled$TimePoint)
 treatmentList <- unique(datScaled$Treatment)
 treatmentList <- treatmentList[!treatmentList=="(-)-Serum"]
 
-exp <- expand.grid(Treatment = treatmentList, 
-                      CellLine = cellLineList,
-                      TimePoint = timePointList)
+combo <- expand.grid(Treatment = treatmentList, 
+                   CellLine = cellLineList,
+                   TimePoint = timePointList)
+
+target1 <- rep(data.frame(pairTarList)$X1, nrow(combo)) %>% as.character()
+target2 <- rep(data.frame(pairTarList)$X2, nrow(combo)) %>% as.character()
+combo2 <- replicate(nrow(pairTarList), combo, simplify = FALSE) %>% bind_rows()
+combo3 <- cbind(target1, target2, combo2) %>% mutate_all(as.character)
+names(combo3) <- c("Target1", "Target2", "Treatment", "CellLine", "TimePoint")
 
 hotel <- list()
-for(i in seq_len(nrow(exp))){
-        tmp <- exp[i,]
+for(i in seq_len(nrow(combo3))){
+        tmp <- combo3[i,]
         cntl <- filter(datScaled, Treatment == "(-)-Serum" & 
-                               TimePoint == exp[i, 3] &
-                               CellLine == exp[i, 2])
+                               TimePoint == combo3[i, 5] &
+                               CellLine == combo3[i, 4] &
+                                Target %in% combo3[i, c(1,2)])
         castCntl <- dcast(data = cntl, Replicate + n ~ Target,
-                          value.var = "NetShift") %>% na.omit()
+                          value.var = "NormLog") %>% na.omit()
         castCntl <- castCntl[, -c(1,2)]
-        smpl <- filter(datScaled, Treatment == exp[i, 1] &
-                               CellLine == exp[i, 2] &
-                               TimePoint == exp[i, 3])
+        smpl <- filter(datScaled, Treatment == combo3[i, 3] &
+                               TimePoint == combo3[i, 5] &
+                               CellLine == combo3[i, 4] &
+                               Target %in% combo3[i, c(1,2)])
         castSmpl <- dcast(data = smpl, Replicate + n ~ Target,
-                          value.var = "NetShift") %>% na.omit()
+                          value.var = "NormLog") %>% na.omit()
         castSmpl <- castSmpl[, -c(1,2)]
-        test <- hotelling.test(castSmpl, castCntl, TRUE)
+        test <- hotelling.test(castSmpl, castCntl, shrinkage = TRUE)
         tmp$pval <- test$pval
         tmp$stat <- test$stats$statistic
         tmp$df1 <- test$stats$df[1]
@@ -205,26 +314,18 @@ for(i in seq_len(nrow(exp))){
 
 hotel <- bind_rows(hotel)
 
-attach(datScaled)
-interaction.plot(x.factor = interaction(Treatment, TimePoint, CellLine), 
-                 trace.factor = Target, col = c(1:12), lty = 1,
-                 response = NormLog)
+# attach(datScaled)
+# interaction.plot(x.factor = interaction(Treatment, TimePoint, CellLine), 
+#                  trace.factor = Target, col = c(1:12), lty = 1,
+#                  response = NormLog)
 
-ggplot(datSum, aes(x = interaction(Treatment, TimePoint,  CellLine),
-                   y = NormLog_mean, group = Target, color = Target)) +
-        geom_line() + coord_flip() + labs(y = "Z-score", x = "")
+# ggplot(datSum, aes(x = interaction(Treatment, TimePoint,  CellLine),
+#                   y = NormLog_mean, group = Target, color = Target)) +
+#        geom_line() + coord_flip() + labs(y = "Z-score", x = "")
 
 # Protein Pairs -----------------------------------------------------------
 
 pairsList <- t(combn(targetList, 2))
-
-cellLine <- unique(dat$CellLine)
-treatmentList <- unique(dat$Treatment)
-timePoint <- unique(dat$TimePoint)
-combo <- expand.grid(Treatment = treatmentList, 
-                     CellLine = cellLine,
-                     TimePoint = timePoint)
-
 pairedDat <- list()
 
 for(i in seq_len(nrow(combo))){
@@ -280,7 +381,7 @@ t.test2 <- function(m1,m2,s1,s2,n1,n2,m0=0,equal.variance=FALSE)
         }      
         t <- (m1-m2-m0)/se 
         dat <- c(m1-m2, se, t, 2*pt(-abs(t),df))    
-        names(dat) <- c("Difference of means", "Std Error", "t", "p-value")
+        # names(dat) <- c("Difference of means", "Std Error", "t", "p-value")
         return(dat) 
 }
 
@@ -311,3 +412,40 @@ nprot <- length(unique(pairedTests$Target_1))
 ntests <- factorial(nprot) / (2 * factorial(nprot-2))
 alpha <- pval / ntests
 
+
+# Calculate Score ---------------------------------------------------------
+
+casting <- dcast(datScaled, TimePoint + CellLine + Treatment + Target ~
+                         Replicate + n, 
+                 value.var = "NormLog", fun.aggregate = mean)
+
+rownames(casting) = paste(casting$Treatment,
+                          casting$CellLine,
+                          casting$TimePoint,
+                          casting$Target)
+
+mcast <-data.matrix(casting[, -c(1,2,3,4)])
+
+mcastCor <- rcorr(t(mcast))
+
+datCor <- mcastCor$r
+
+correlation <- vector()
+
+for (i in seq_len(nrow(paired))){
+        txt <- paired[i, 3]
+        cl <- paired[i, 4]
+        tp <- paired[i, 5]
+        tar1 <- paired[i, 1]
+        tar2 <- paired[i, 2]
+        whichRow <- paste(txt, cl, tp, tar1)
+        whichCol <- paste(txt, cl, tp, tar2)
+        
+        correlation[i] <- datCor[whichRow, whichCol]
+        # corList[[i]] <- correlation 
+        # names(corList) <- "Correlation"
+        
+        # print(paste(txt, cl, tp))
+}
+
+updated <- cbind(paired, correlation)

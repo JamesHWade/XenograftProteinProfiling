@@ -1,52 +1,6 @@
-CombineNetShifts <- function(loc = 'plots', ch){
-        library(tidyverse)
-        
-        directory <- getwd()
-        setwd(loc)
-        
-        netList <- grep('net', list.files(pattern = '.csv'), value = TRUE)
-        removeFiles <- grep("Combined", netList, value = TRUE)
-        netList <- netList[!netList %in% removeFiles]
-        
-        if ( ch %in% c(1, 2) ) { 
-                netList <- grep(paste0("ch", ch), netList, value = TRUE)
-        }
-        
-        
-        netShifts <- lapply(netList, read_csv)
-        
-        netComb <- bind_rows(netShifts)
-        netComb <- filter(netComb, !grepl("thermal|offTarget", Target))
-        
-        netCast <- dcast(netComb, Ring + Group + Target + Experiment + Channel ~
-                                 Step, value.var = "Net Shift")
-        
-        netCast <- netCast %>% mutate(`25` = `20` + `25`,
-                                      `30` = `25` + `30`,
-                                      `35` = `30` + `35`,
-                                      `40` = `35` + `40`)
-        
-        netMelt <- melt(netCast, id.vars = c("Ring", "Group", "Target",
-                                             "Experiment", "Channel"),
-                        measure.vars = c("20", "25", "30", "35", "40"),
-                        variable.name = "Cycle", 
-                        value.name = "NetShift")
-        
-        filename <- paste0(name, "_netShiftsCombined_ch", ch, ".csv")
-        
-        write_csv(netMelt, path = filename)
-        
-        setwd(directory)
-}
+
 
 PlotCombineNetShifts <- function(loc = 'plots', ch){
-        library(tidyverse)
-        library(ggthemes)
-        theme_set(theme_few(base_size = 16))
-        
-        dat <- read_csv(paste0(loc, "/", name, "_netShiftsCombined_ch", 
-                               ch, ".csv"))
-        
         g1 <- ggplot(dat, aes(x = Cycle, y = NetShift, 
                               color = Target, group = Cycle)) + 
                 geom_boxplot() + facet_wrap(~Target)
@@ -57,12 +11,12 @@ PlotCombineNetShifts <- function(loc = 'plots', ch){
                 ggtitle(name) + facet_wrap(~Target)
         
         ggsave(plot = g2, filename = paste0(loc, "/", name,
-                                            "_netShiftsCombined_ch", ch,  
+                                            "_netShiftsCombined", 
                                             "_boxplot.png"),
                width = 8, height = 6)
         
         ggsave(plot = g2, filename = paste0(loc, "/", name,
-                                            "_netShiftsCombined_ch", ch,  
+                                            "_netShiftsCombined",  
                                             ".png"),
                width = 8, height = 6)
 }

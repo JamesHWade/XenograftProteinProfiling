@@ -1,15 +1,15 @@
 # Split data for heatmaps and correlation plots
 DataSplitHeat <- function(){
-        setwd("D:/Box Sync/Data/")
+        setwd("D:/Box Sync/XPP_Data/")
         library(tidyverse)
         library(reshape2)
         library(gplots) # heatmap.2
         library(Hmisc) # for rcorr function
         library(corrplot)
         
-        dat <- read_csv("compiledSummed.csv")
+        dat <- read_csv("compiledNormalized.csv")
         
-        dat.1 <- filter(dat, !grepl("p53|Abl", Target))
+        dat.1 <- dat
         dat.6 <- filter(dat.1, CellLine == "GBM6")
         dat.26 <- filter(dat.1, CellLine == "GBM26")
         dat.1h <- filter(dat.1, TimePoint == "1h")
@@ -23,27 +23,36 @@ DataSplitHeat <- function(){
         dat.26.24 <- filter(dat.1, TimePoint == "24h",
                             CellLine == "GBM26")
         
+        casting.1a <- dcast(dat.1, TimePoint + CellLine + Treatment + Target ~
+                                    Replicate + n, 
+                           value.var = "NormLog", fun.aggregate = mean)
+
         casting.1 <- dcast(dat.1, TimePoint + CellLine + Treatment ~ Target, 
-                           value.var = "NormLog_mean")
+                           value.var = "NormLog", fun.aggregate = mean)
         casting.6 <- dcast(dat.6, TimePoint + CellLine + Treatment ~ Target,
-                           value.var = "NormLog_mean")
+                           value.var = "NormLog", fun.aggregate = mean)
         casting.26 <- dcast(dat.26, TimePoint + CellLine + Treatment ~Target,
-                            value.var = "NormLog_mean")
+                            value.var = "NormLog", fun.aggregate = mean)
         casting.1h <- dcast(dat.1h, TimePoint + CellLine + Treatment ~ Target,
-                            value.var = "NormLog_mean")
+                            value.var = "NormLog", fun.aggregate = mean)
         casting.24h <- dcast(dat.24h, TimePoint + CellLine + Treatment ~ Target,
-                             value.var = "NormLog_mean")
+                             value.var = "NormLog", fun.aggregate = mean)
         casting.6.1 <- dcast(dat.6.1, TimePoint + CellLine + Treatment ~ Target,
-                             value.var = "NormLog_mean")
+                             value.var = "NormLog", fun.aggregate = mean)
         casting.6.24 <- dcast(dat.6.24, TimePoint + CellLine + Treatment ~
                                       Target,
-                              value.var = "NormLog_mean")
+                              value.var = "NormLog", fun.aggregate = mean)
         casting.26.1 <- dcast(dat.26.1, TimePoint + CellLine + Treatment ~
                                       Target,
-                              value.var = "NormLog_mean")
+                              value.var = "NormLog", fun.aggregate = mean)
         casting.26.24 <- dcast(dat.26.24, TimePoint + CellLine + Treatment ~ 
                                        Target,
-                               value.var = "NormLog_mean")
+                               value.var = "NormLog", fun.aggregate = mean)
+        
+        rownames(casting.1a) = paste(casting.1a$Treatment,
+                                    casting.1a$CellLine,
+                                    casting.1a$TimePoint,
+                                    casting.1a$Target)
         
         rownames(casting.1) = paste(casting.1$Treatment,
                                     casting.1$CellLine,
@@ -82,6 +91,7 @@ DataSplitHeat <- function(){
                                         casting.6.24$TimePoint,
                                         sep = " ")
 
+        casting.1a[,c(1,2,3,4)] <- NULL
         casting.1[,c(1,2,3)] <- NULL
         casting.6[,c(1,2,3)] <- NULL
         casting.26[,c(1,2,3)] <- NULL
@@ -92,6 +102,7 @@ DataSplitHeat <- function(){
         casting.26.1[,c(1,2,3)] <- NULL
         casting.26.24[,c(1,2,3)] <- NULL
         
+        casting.1a.m <<-data.matrix(casting.1a)
         casting.1.m <<- data.matrix(casting.1)
         casting.6.m <<- data.matrix(casting.6)
         casting.26.m <<- data.matrix(casting.26)
@@ -102,6 +113,7 @@ DataSplitHeat <- function(){
         casting.26.1.m <<- data.matrix(casting.26.1)
         casting.26.24.m <<- data.matrix(casting.26.24)
         
+        allThings <<- rcorr(t(casting.1a))
         both.both.tar <<- rcorr(casting.1.m)
         both.both.txt <<- rcorr(t(casting.1.m))
         GBM6.both.tar <<- rcorr(casting.6.m)
@@ -125,278 +137,277 @@ DataSplitHeat <- function(){
 # Heatmaps
 HeatPlots <- function(){
         # hmcol <- colorRampPalette(c("darkblue", "white", "darkred"))
+        setwd("D:/Box Sync/XPP_Plots/Heatmaps")
         hmcol <- colorRampPalette(c("#3a5387", "#e8e8e8", "#b25752"))(256)
         
-        png('Heatmap_All.png', width = 16, height = 12,
-            units = "in", res = 100)
-        heatmap.2(casting.1.m, scale = "col", col = hmcol, key = T, 
-                  margins = c(20, 20), trace = "none",
-                  main = "GBM 6 & 26 with 1h & 24 h")
+        png('Heatmap_All.png', width = 8, height = 8,
+            units = "in", res = 200)
+        heatmap(casting.1.m, scale = "none", col = hmcol, margins = c(10, 10),
+                  main = "Everything: GBM 6 & 26 at 1 h & 24 h")
         dev.off()
         
-        png('Heatmap_GBM6.png', width = 16, height = 12,
-            units = "in", res = 100)
-        heatmap.2(casting.6.m, scale = "col", col = hmcol, key = T, 
-                  margins = c(20, 20), trace = "none",
+        png('Heatmap_GBM6.png', width = 8, height = 8,
+            units = "in", res = 200)
+        heatmap(casting.6.m, scale = "none", col = hmcol, margins = c(10, 10),
                   main = "GBM 6 with 1h & 24h")
         dev.off()
         
-        png('Heatmap_GBM26.png', width = 16, height = 12,
-            units = "in", res = 100)
-        heatmap.2(casting.26.m, scale = "col", col = hmcol, key = T, 
-                  margins = c(20, 20), trace = "none",
+        png('Heatmap_GBM26.png', width = 8, height = 8,
+            units = "in", res = 200)
+        heatmap(casting.26.m, scale = "none", col = hmcol, margins = c(10, 10),
                   main = "GBM 26 with 1h & 24h")
         dev.off()
         
-        png('Heatmap_1h_both.png', width = 16, height = 12,
-            units = "in", res = 100)
-        heatmap.2(casting.1h.m, scale = "col", col = hmcol, key = T, 
-                  margins = c(20, 20), trace = "none",
+        png('Heatmap_1h_both.png', width = 8, height = 8,
+            units = "in", res = 200)
+        heatmap(casting.1h.m, scale = "none", col = hmcol, margins = c(10, 10),
                   main = "GBM 6 & 26 with 1h")
         dev.off()
         
-        png('Heatmap_24h_both.png', width = 16, height = 12,
-            units = "in", res = 100)
-        heatmap.2(casting.24h.m, scale = "col", col = hmcol, key = T, 
-                  margins = c(20, 20), trace = "none",
+        png('Heatmap_24h_both.png', width = 8, height = 8,
+            units = "in", res = 200)
+        heatmap(casting.24h.m, scale = "none", col = hmcol, margins = c(10, 10),
                   main = "GBM 6 & 26 with 24h")
         dev.off()
         
-        png('Heatmap_GBM6_1h.png', width = 16, height = 12,
-            units = "in", res = 100)
-        heatmap.2(casting.6.1.m, scale = "col", col = hmcol, key = T, 
-                  margins = c(20, 20), trace = "none",
+        png('Heatmap_GBM6_1h.png', width = 8, height = 8,
+            units = "in", res = 200)
+        heatmap(casting.6.1.m, scale = "none", col = hmcol, margins = c(10, 10),
                   main = "GBM 6 with 1h")
         dev.off()
         
-        png('Heatmap_GBM6_24h.png', width = 16, height = 12,
-            units = "in", res = 100)
-        heatmap.2(casting.6.24.m, scale = "col", col = hmcol, key = T, 
-                  margins = c(20, 20), trace = "none",
+        png('Heatmap_GBM6_24h.png', width = 8, height = 8,
+            units = "in", res = 200)
+        heatmap(casting.6.24.m, scale = "none", col = hmcol, margins = c(10, 10),
                   main = "GBM 6 with 24h")
         dev.off()
         
-        png('Heatmap_GBM26_1h.png', width = 16, height = 12,
-            units = "in", res = 100)
-        heatmap.2(casting.26.1.m, scale = "col", col = hmcol, key = T, 
-                  margins = c(20, 20), trace = "none",
+        png('Heatmap_GBM26_1h.png', width = 8, height = 8,
+            units = "in", res = 200)
+        heatmap(casting.26.1.m, scale = "none", col = hmcol, margins = c(10, 10),
                   main = "GBM 26 with 1h")
         dev.off()
         
-        png('Heatmap_GBM26_24h.png', width = 16, height = 12,
-            units = "in", res = 100)
-        heatmap.2(casting.26.24.m, scale = "col", col = hmcol, key = T, 
-                  margins = c(20, 20), trace = "none",
+        png('Heatmap_GBM26_24h.png', width = 8, height = 8,
+            units = "in", res = 200)
+        heatmap(casting.26.24.m, scale = "none", col = hmcol, margins = c(10, 10),
                   main = "GBM 26 with 24h")
         dev.off()
 }
 
 # Corrplots
 CorrPlots <- function(){
-        png('Corrplot_All_Targets.png', width = 16, height = 12,
-            units = "in", res = 100)
+        setwd("D:/Box Sync/XPP_Plots/CorrPlots")
+        
+        png('Corrplot_All_The_Things.png', width = 8, height = 8,
+            units = "in", res = 400)
+        corrplot(allThings$r, method = "color", tl.pos = "n")
+        dev.off()
+        
+        png('Corrplot_All_Targets.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(both.both.tar$r,
                  title = "Cell Lines: GBM 6, 26 Time Points: 1 h, 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_All_Treatments.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_All_Treatments.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(both.both.txt$r,
                  title = "Cell Lines: GBM 6, 26 Time Points: 1 h, 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
         # Time Points
         
-        png('Corrplot_1h_Targets.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_1h_Targets.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(both.1.tar$r,
                  title = "Cell Lines: GBM 6, 26 Time Points: 1 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_1h_Treatments.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_1h_Treatments.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(both.1.txt$r,
                  title = "Cell Lines: GBM 6, 26 Time Points: 1 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_24h_Targets.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_24h_Targets.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(both.24.tar$r,
                  title = "Cell Lines: GBM 6, 26 Time Points: 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_24h_Treatments.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_24h_Treatments.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(both.24.txt$r,
                  title = "Cell Lines: GBM 6, 26 Time Points: 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
         # GBM 6
         
-        png('Corrplot_GBM6_Targets.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM6_Targets.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM6.both.tar$r,
                  title = "Cell Lines: GBM 6 Time Points: 1 h, 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
         
-        png('Corrplot_GBM6_Treatments.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM6_Treatments.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM6.both.txt$r,
                  title = "Cell Lines: GBM 6 Time Points: 1 h, 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_GBM6_1h_Treatments.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM6_1h_Treatments.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM6.1.txt$r,
                  title = "Cell Lines: GBM 6 Time Points: 1 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_GBM6_1h_Targets.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM6_1h_Targets.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM6.1.tar$r,
                  title = "Cell Lines: GBM 6 Time Points: 1 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_GBM6_24h_Targets.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM6_24h_Targets.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM6.24.tar$r,
                  title = "Cell Lines: GBM 6 Time Points: 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_GBM6_24h_Treatments.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM6_24h_Treatments.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM6.24.txt$r,
                  title = "Cell Lines: GBM 6 Time Points: 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
         # GBM 26
         
-        png('Corrplot_GBM26_Targets.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM26_Targets.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM26.both.tar$r,
                  title = "Cell Lines: GBM 26 Time Points: 1 h, 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
         
-        png('Corrplot_GBM26_Treatments.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM26_Treatments.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM26.both.txt$r,
                  title = "Cell Lines: GBM 26 Time Points: 1 h, 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_GBM26_1h_Treatments.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM26_1h_Treatments.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM26.1.txt$r,
                  title = "Cell Lines: GBM 26 Time Points: 1 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_GBM26_1h_Targets.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM26_1h_Targets.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM26.1.tar$r,
                  title = "Cell Lines: GBM 26 Time Points: 1 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_GBM26_24h_Treatments.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM26_24h_Treatments.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM26.24.txt$r,
                  title = "Cell Lines: GBM 26 Time Points: 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
         
-        png('Corrplot_GBM26_24h_Targets.png', width = 16, height = 12,
-            units = "in", res = 100)
+        png('Corrplot_GBM26_24h_Targets.png', width = 8, height = 8,
+            units = "in", res = 200)
         corrplot(GBM26.24.tar$r,
                  title = "Cell Lines: GBM 26 Time Points: 24 h",
                  method = "color",
-                 diag = FALSE,
-                 type = "lower",
-                 tl.col = "black",
-                 mar = c(1, 1, 1, 1))
+                 # diag = FALSE,
+                 # type = "lower",
+                 tl.col = "black", tl.cex = 1.25, cl.cex = 1,
+                 mar = c(0, 0, 2, 0))
         dev.off()
 }
 
